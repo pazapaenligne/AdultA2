@@ -415,7 +415,7 @@
       <button type="button" id="back7">Back</button>
       <div class="right">
         <button class="ghost" type="button" id="btnTry">Try again</button>
-        <button class="primary" type="button" id="btnDone" disabled>Done</button>
+        <button class="primary" type="button" id="btnDone">Done</button>
       </div>
     </div>
   </section>
@@ -574,6 +574,7 @@
     var h=$("s"+n).querySelector("h2");
     if(h && !noFocus){ h.setAttribute("tabindex","-1"); h.focus(); try{ window.scrollTo(0,0);}catch(e){} }
     announce("Moment "+n+" of "+TOTAL+". "+(h?h.textContent:""));
+    if(n===7 && typeof renderS7==="function") renderS7();
     save();
   }
 
@@ -784,22 +785,27 @@
   $("btnTo7").addEventListener("click",function(){ go(7); });
 
   /* ---------------- MOMENT 7 + completion ---------------- */
-  function participationOk(){
-    var builtTry=S.s3.A.tries>0||S.s3.B.tries>0||checkBuild("A",S.s3.A.order).ok||checkBuild("B",S.s3.B.order).ok;
-    var repairTry=S.s5.tries>0;
-    var replyTry=S.s7.text.trim().length>=12;
-    return builtTry && repairTry && replyTry;
+  function workAttempted(){
+    var build=S.s3.A.order.length>0||S.s3.B.order.length>0||S.s3.A.tries>0||S.s3.B.tries>0;
+    var repair=S.s5.tries>0||norm(S.s5.text)!==norm("If the AC stop, I'll message maintenance.");
+    var adapt=S.s4.tries>0||S.s4.text.trim().length>0;
+    return build||repair||adapt;
   }
+  function replyAttempted(){ return S.s7.text.trim().length>=8 || (S.s6.submitted && S.s6.first.trim().length>=6); }
+  function participationOk(){ return workAttempted() && replyAttempted(); }
+  function missingMsg(){
+    if(!replyAttempted()) return "Write your short final message first, then press Done.";
+    if(!workAttempted()) return "Try the build or the repair first, then press Done.";
+    return "";
+  }
+
   function renderS7(){
     $("weekInput").value=S.s7.text;
     document.querySelectorAll(".wc").forEach(function(c){ c.checked=!!S.s7.checks[+c.getAttribute("data-i")]; });
     var doneBtn=$("btnDone");
     if(doneFired){ doneBtn.textContent="Done ✓"; doneBtn.disabled=true; }
-    else { doneBtn.textContent="Done"; doneBtn.disabled=!participationOk(); }
-    if(!doneFired){
-      if(participationOk()) setFb($("fb7"),null,"");
-      else setFb($("fb7"),null,"Write your short final message to finish. Try a build and a repair first if you skipped them.");
-    }
+    else { doneBtn.textContent="Done"; doneBtn.disabled=false; }
+    if(!doneFired && !completionInFlight) setFb($("fb7"),null,"");
   }
   $("weekInput").addEventListener("input",function(){ S.s7.text=this.value; save(); if(!doneFired) renderS7(); });
   document.querySelectorAll("#s7 .chip[data-ins]").forEach(function(b){
@@ -856,7 +862,7 @@
   }
   $("btnDone").addEventListener("click",function(){
     if(doneFired || completionInFlight) return;
-    if(!participationOk()) return;
+    if(!participationOk()){ setFb($("fb7"),false,missingMsg()); announce(missingMsg()); return; }
     if(completionSent){ S.completed=true; save(); showCompleted(); return; }
     completionInFlight=true; $("btnDone").disabled=true;
     commitCompletion().then(function(res){
