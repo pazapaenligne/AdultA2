@@ -29,8 +29,7 @@ CONTENT KEYS (search "KEYS" in the script):
       uses a self-check (labelled as self-check, not system marking).
 
 CONFIGURABLE ASSETS (see CONFIG in the script):
-  - CONFIG.audio.scene : URL of a VERIFIED model recording (normal speed only).
-      null = a clear "audio not available" state is shown. Never autoplays.
+  - No audio is used in this activity; all model language is shown as text.
   - Images and logo are embedded from the Week 10 Lesson 2 workbook artwork.
 
 OPTIONAL FEEDBACK ENDPOINT:
@@ -216,7 +215,6 @@ footer{margin-top:18px;font-size:.85rem;color:var(--muted)}
    ------------------------------------------------------------------ */
 var CONFIG = {
   activityId: 'A2-W10-L2-S4',
-  audio: { scene: null },      // verified recording URL, or null (shows "not available")
   feedbackEndpoint: ''         // '' = not connected. Only used after an explicit learner action.
 };
 
@@ -384,14 +382,6 @@ function viewScene(){
   h += '<div class="chat" aria-label="Interview conversation">'+
        '<div class="bubble"><span class="who">Hana, interviewer</span>What are your strengths?</div>'+
        '<div class="bubble cand"><span class="who">Mariam, candidate</span><mark class="phrase">I am reliable and I learn fast.</mark></div></div></div>';
-  // audio (optional, verified only)
-  if(CONFIG.audio.scene){
-    h += '<div class="audio-box"><p style="margin:0 0 6px"><strong>Model audio</strong> (normal speed)</p>'+
-         '<audio controls preload="none" src="'+esc(CONFIG.audio.scene)+'">Your browser cannot play this audio.</audio>'+
-         '<p class="muted" style="margin:6px 0 0">Transcript: Hana: “What are your strengths?” Mariam: “I am reliable and I learn fast.”</p></div>';
-  } else {
-    h += '<div class="audio-box"><strong>Model audio:</strong> not available in this version. The written model above is all you need.</div>';
-  }
   h += '<div class="doc" style="margin:12px 0 16px"><div class="doc-h">Practice offer letter: one detail</div><dl>'+
        '<div class="row"><dt>Position</dt><dd>Customer service assistant</dd></div>'+
        '<div class="row"><dt>Notice period</dt><dd>One month</dd></div>'+
