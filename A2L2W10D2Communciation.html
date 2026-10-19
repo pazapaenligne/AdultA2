@@ -14,7 +14,6 @@
    - Complication: start date "Monday 9 November" (workbook offer letter) - learner confirms or suggests another date.
    - Open communication: no wording key. Only the closed facts above are fixed. Self-check is self-assessment only.
   CONFIGURABLE ASSETS
-   - FEEDBACK_ENDPOINT (below): optional HTTPS endpoint. Empty = no external feedback and nothing is ever sent.
   COMPLETION
    - SCORM 1.2 / 2004 adapter. Completion is sent only when the learner presses Done after the participation criteria.
      completionInFlight / completionSent guards; "sent" is set only after a confirmed commit and read-back.
@@ -128,7 +127,7 @@
         <li>Close: confirm a next step or end politely.</li>
       </ul>
     </div>
-    <p>You can use your own details or make them up. Please do not share real documents or numbers. This is private practice. Nothing is sent anywhere.</p>
+    <p>You can use your own details or make them up.</p>
     <div class="row"><button class="btn" data-go="3">Start</button></div>
   </section>
 
@@ -202,12 +201,6 @@
     <div class="cmp"><div class="box"><span class="label">First attempt</span><span id="r-a1"></span></div><div class="box"><span class="label">Your reply</span><span id="r-fu"></span></div></div>
     <div id="crit-list"></div>
     <fieldset><legend>Choose one thing to improve</legend><div class="cards two" id="improve-cards"></div></fieldset>
-    <div id="fb-wrap" hidden class="box">
-      <span class="label">Optional feedback service</span>
-      <p>If you press the button, your <em>written text only</em> is sent to the feedback service set up by your school. Recordings are never sent.</p>
-      <button class="btn secondary" id="fb-btn">Send my text for feedback</button>
-      <p id="fb-out" class="msg" role="status"></p>
-    </div>
     <p id="s6-msg" class="msg err" role="alert"></p>
     <div class="row end"><button class="btn secondary" data-go="5">Back</button><button class="btn" id="s6-next">Improve my answer</button></div>
   </section>
@@ -257,7 +250,6 @@
   "use strict";
 
   /* ===== Configurable assets (see header comment) ===== */
-  var FEEDBACK_ENDPOINT = "";              /* optional HTTPS endpoint; empty = disabled */
   var ACTIVITY_ID = "A2-W10-L2-S6";
   var LOCAL_KEY = "pazapa_a2_w10_l2_step6";
   var SCHEMA = 1;
@@ -500,7 +492,6 @@
       r.addEventListener("change",function(){ state.improve=c.id; save(); });
       l.appendChild(r); l.appendChild(el("span",null,c.name)); ic.appendChild(l);
     });
-    $("fb-wrap").hidden=!FEEDBACK_ENDPOINT;
   }
   function renderImprove(){
     var c=CRITERIA.filter(function(x){return x.id===state.improve;})[0];
@@ -585,17 +576,6 @@
     show(8);
   });
 
-  /* Optional feedback (disabled when FEEDBACK_ENDPOINT is empty). Sends text only, on explicit action. */
-  $("fb-btn").addEventListener("click",function(){
-    if(!FEEDBACK_ENDPOINT) return;
-    var out=$("fb-out"); out.className="msg"; out.textContent="Sending…";
-    var ctl=("AbortController" in window)?new AbortController():null; var to=window.setTimeout(function(){ if(ctl) ctl.abort(); },10000);
-    fetch(FEEDBACK_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({activity:ACTIVITY_ID,text:(state.a1.text+"\n"+state.fu.text).slice(0,800)}),signal:ctl?ctl.signal:undefined})
-      .then(function(r){ if(!r.ok) throw new Error("bad"); return r.json(); })
-      .then(function(j){ window.clearTimeout(to); if(!j||typeof j.feedback!=="string") throw new Error("shape"); out.className="msg"; out.textContent="Automatic feedback (may be uncertain): "+j.feedback.slice(0,600); })
-      .catch(function(){ window.clearTimeout(to); out.className="msg err"; out.textContent="Feedback is not available now. You can press the button to try again."; });
-  });
-
   /* ===== Try again and Done ===== */
   $("s8-retry").addEventListener("click",function(){
     stopAll(); ["a1","fu","a2"].forEach(releaseRec);
@@ -612,7 +592,7 @@
     if(r.ok){
       btn.disabled=true; m.className="msg ok";
       m.textContent=r.reason==="local"
-        ? "Done. Your progress is saved on this device. No learning platform was found, so nothing was sent."
+        ? "Done. Your work is marked as done."
         : "Done. Your completion has been saved.";
       announce(m.textContent);
     } else {
